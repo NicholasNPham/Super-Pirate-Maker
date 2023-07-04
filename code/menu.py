@@ -17,8 +17,6 @@ class Menu:
                 else:
                     self.menu_surfs[value['menu']].append((key, load(value['menu_surf'])))
 
-        print(self.menu_surfs)
-
     def create_buttons(self):
 
         # Menu Area General Setup
