@@ -10,6 +10,8 @@ from support import *
 from menu import Menu
 from timer import Timer
 
+from random import choice, randint
+
 class Editor:
     def __init__(self, land_tiles):
 
@@ -20,6 +22,13 @@ class Editor:
         # Imports
         self.land_tiles = land_tiles
         self.imports()
+
+        # Clouds
+        self.current_clouds = []
+        self.cloud_surf = import_folder('../graphics/clouds')
+        self.cloud_timer = pygame.USEREVENT + 1
+        pygame.time.set_timer(self.cloud_timer, 2000)
+        self.startup_clouds()
 
         # Navigation
         self.origin = vector()
@@ -144,6 +153,8 @@ class Editor:
 
             self.canvas_add()
             self.canvas_remove()
+
+            self.create_clouds(event)
 
     def pan_input(self, event):
 
@@ -328,6 +339,54 @@ class Editor:
                     rect = surf.get_rect(center = mouse_pos())
                 self.display_surface.blit(surf, rect)
 
+    def display_sky(self, dt):
+        self.display_surface.fill(SKY_COLOR)
+        y = self.sky_handle.rect.centery
+
+        # Horizon Lines
+        if y > 0:
+            horizon_rect1 = pygame.Rect(0, y - 10, WINDOW_WIDTH, 10)
+            horizon_rect2 = pygame.Rect(0, y - 16, WINDOW_WIDTH, 4)
+            horizon_rect3 = pygame.Rect(0, y - 20, WINDOW_WIDTH, 2)
+            pygame.draw.rect(self.display_surface, HORIZON_TOP_COLOR, horizon_rect1)
+            pygame.draw.rect(self.display_surface, HORIZON_TOP_COLOR, horizon_rect2)
+            pygame.draw.rect(self.display_surface, HORIZON_TOP_COLOR, horizon_rect3)
+
+            self.display_clouds(dt, y)
+
+        # Sea
+        if 0 < y < WINDOW_HEIGHT:
+            sea_rect = pygame.Rect(0, y, WINDOW_WIDTH, WINDOW_HEIGHT)
+            pygame.draw.rect(self.display_surface, SEA_COLOR, sea_rect)
+        if y < 0:
+            self.display_surface.fill(SEA_COLOR)
+
+        pygame.draw.line(self.display_surface, HORIZON_COLOR, (0, y), (WINDOW_WIDTH, y), 3)
+
+    def display_clouds(self, dt, horizon_y):
+        for cloud in self.current_clouds: # [{surf, pos, speed}]
+            cloud['pos'][0] -= cloud['speed'] * dt
+            x = cloud['pos'][0]
+            y = horizon_y - cloud['pos'][1]
+            self.display_surface.blit(cloud['surf'], (x, y))
+
+    def create_clouds(self, event):
+        if event.type == self.cloud_timer:
+            surf = choice(self.cloud_surf)
+            surf = pygame.transform.scale2x(surf) if randint(0, 4) < 2 else surf
+
+            pos = [WINDOW_WIDTH + randint(50, 100), randint(0, WINDOW_HEIGHT)]
+            self.current_clouds.append({'surf': surf, 'pos': pos, 'speed': randint(1, 10)})
+
+            # Remove Clouds
+            self.current_clouds = [cloud for cloud in self.current_clouds if cloud['pos'][0] > -400]
+
+    def startup_clouds(self):
+        for i in range(20):
+            surf = pygame.transform.scale2x(choice(self.cloud_surf)) if randint(0, 4) < 2 else choice(self.cloud_surf)
+            pos = [randint(0, WINDOW_WIDTH), randint(0, WINDOW_HEIGHT)]
+            self.current_clouds.append({'surf': surf, 'pos': pos, 'speed': randint(1, 10)})
+
     # Update
     def run(self, dt):
         self.event_loop()
@@ -338,10 +397,11 @@ class Editor:
         self.object_timer.update()
 
         # Drawing
-        self.display_surface.fill('white')
+        self.display_surface.fill('grey')
+        self.display_sky(dt)
         self.draw_level()
         self.draw_tiles_lines()
-        pygame.draw.circle(self.display_surface, 'red', self.origin, 10)
+        # pygame.draw.circle(self.display_surface, 'red', self.origin, 10)
         self.preview()
         self.menu.display(self.selection_index)
 
