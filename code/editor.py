@@ -13,11 +13,12 @@ from timer import Timer
 from random import choice, randint
 
 class Editor:
-    def __init__(self, land_tiles):
+    def __init__(self, land_tiles, switch):
 
         # Main Setup
         self.display_surface = pygame.display.get_surface()
         self.canvas_data = {}
+        self.switch = switch
 
         # Imports
         self.land_tiles = land_tiles
@@ -205,7 +206,7 @@ class Editor:
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                print(self.create_grid())
+                self.switch(self.create_grid())
 
             self.pan_input(event)
             self.selection_hotkeys(event)
