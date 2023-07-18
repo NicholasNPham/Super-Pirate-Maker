@@ -4,10 +4,11 @@ from pygame.math import Vector2 as vector
 from settings import *
 
 class Generic(pygame.sprite.Sprite):
-    def __init__(self, pos, surf, group):
+    def __init__(self, pos, surf, group, z = LEVEL_LAYERS['main']):
         super().__init__(group)
         self.image = surf
         self.rect = self.image.get_rect(topleft = pos)
+        self.z = z
 
 class Block(Generic):
     def __init__(self, pos, size, group):
@@ -16,10 +17,10 @@ class Block(Generic):
 
 # Simple Animated Objects
 class Animated(Generic):
-    def __init__(self, assets, pos, group):
+    def __init__(self, assets, pos, group, z = LEVEL_LAYERS['main']):
         self.animation_frames = assets
         self.frame_index = 0
-        super().__init__(pos, self.animation_frames[self.frame_index], group)
+        super().__init__(pos, self.animation_frames[self.frame_index], group, z)
 
     def animate(self, dt):
         self.frame_index += ANIMATION_SPEED * dt
@@ -76,27 +77,50 @@ class Shell(Generic):
         self.rect.bottom = self.rect.top + TILE_SIZE
 
 class Player(Generic):
-    def __init__(self, pos, group, collision_sprites):
-        super().__init__(pos, pygame.Surface((80,64)), group)
-        self.image.fill('red')
+    def __init__(self, pos, assets, group, collision_sprites):
+
+        # Animation Logic
+        self.animation_frames = assets
+        self.frame_index = 0
+        self.status = 'idle'
+        self.orientation = 'right'
+        surf = self.animation_frames[f'{self.status}_{self.orientation}'][self.frame_index]
+
+        super().__init__(pos, surf, group)
 
         # Movement
         self.direction = vector()
         self.pos = vector(self.rect.center)
         self.speed = 25
-        self.gravity = 0.3
+        self.gravity = 0.35
         self.on_floor = False
 
         # Collision
         self.collision_sprites = collision_sprites
         self.hitbox = self.rect.inflate(-50, 0)
 
+    def get_status(self):
+        if self.direction.y < 0:
+            self.status = 'jump'
+        elif self.direction.y > 1:
+            self.status = 'fall'
+        else:
+            self.status = 'run' if self.direction.x != 0 else 'idle'
+
+    def animate(self, dt):
+        current_animation = self.animation_frames[f'{self.status}_{self.orientation}']
+        self.frame_index += ANIMATION_SPEED * dt
+        self.frame_index = 0 if self.frame_index >= len(current_animation) else self.frame_index
+        self.image = current_animation[int(self.frame_index)]
+
     def input(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RIGHT]:
             self.direction.x = 1
+            self.orientation = 'right'
         elif keys[pygame.K_LEFT]:
             self.direction.x = -1
+            self.orientation = 'left'
         else:
             self.direction.x = 0
 
@@ -143,3 +167,6 @@ class Player(Generic):
         self.apply_gravity(dt)
         self.move(dt)
         self.check_on_floor()
+
+        self.get_status()
+        self.animate(dt)
