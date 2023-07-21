@@ -449,7 +449,7 @@ class Editor:
         for i in range(20):
             surf = pygame.transform.scale2x(choice(self.cloud_surf)) if randint(0, 4) < 2 else choice(self.cloud_surf)
             pos = [randint(0, WINDOW_WIDTH), randint(0, WINDOW_HEIGHT)]
-            self.current_clouds.append({'surf': surf, 'pos': pos, 'speed': randint(1, 10)})
+            self.current_clouds.append({'surf': surf, 'pos': pos, 'speed': randint(1, 5)})
 
     # Update
     def run(self, dt):

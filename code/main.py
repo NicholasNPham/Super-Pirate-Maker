@@ -49,6 +49,9 @@ class Main:
 		# Player
 		self.player_graphics = {folder: import_folder(f'../graphics/player/{folder}') for folder in list(walk('../graphics/player'))[0][1]}
 
+		# Clouds
+		self.clouds = import_folder('../graphics/clouds')
+
 	def toggle(self):
 		self.editor_active = not self.editor_active
 
@@ -68,7 +71,8 @@ class Main:
 				'tooth': self.tooth,
 				'shell': self.shell,
 				'player': self.player_graphics,
-				'pearl': self.pearl
+				'pearl': self.pearl,
+				'clouds': self.clouds
 			})
 
 	def run(self):
