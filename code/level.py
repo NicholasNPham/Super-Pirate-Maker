@@ -44,7 +44,8 @@ class Level:
 
                     # Enemies
                     case 7: Spikes(asset_dict['spikes'], pos, [self.all_sprites, self.damage_sprites]) # Spikes
-                    case 8: Tooth(asset_dict['tooth'], pos, [self.all_sprites, self.damage_sprites])
+                    case 8:
+                        Tooth(asset_dict['tooth'], pos, [self.all_sprites, self.damage_sprites], self.collision_sprites)
                     case 9:
                         Shell(orientation = "left",
                               assets = asset_dict['shell'],
@@ -87,6 +88,11 @@ class Level:
         for sprite in collided_coins:
             Particle(self.particle_surfs, sprite.rect.center, self.all_sprites)
 
+    def get_damage(self):
+        collision_sprites = pygame.sprite.spritecollide(self.player, self.damage_sprites, False, pygame.sprite.collide_mask)
+        if collision_sprites:
+            self.player.damage()
+
     def event_loop(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -100,6 +106,7 @@ class Level:
         self.event_loop()
         self.all_sprites.update(dt)
         self.get_coins()
+        self.get_damage()
 
         # Drawing
         self.display_surface.fill(SKY_COLOR)
